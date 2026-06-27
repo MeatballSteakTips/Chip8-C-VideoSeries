@@ -1,6 +1,9 @@
 #include "cpu.h"
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
+#define MAX_ROM_SIZE (4096 - 0x200)
 #define FONTSET_LOCATION 0x050
 
 void cpuInit(CPU *cpu) {
@@ -28,4 +31,52 @@ void cpuInit(CPU *cpu) {
   
   cpu->haultUntilPressed = false;
   cpu->waitReg = 0;
+}
+
+bool loadRom(const char *path, CPU *cpu) {
+  FILE *rom;
+  long fileSize;
+
+  rom = fopen(path, "rb");
+  if(!rom) {
+    fprintf(stderr, "Rom failed to load\n");
+    return false;
+  }
+
+  fseek(rom, 0, SEEK_END);
+  fileSize = ftell(rom);
+  rewind(rom);
+
+  if(fileSize <= 0 || fileSize > MAX_ROM_SIZE) {
+    fprintf(stderr, "Invalid ROM size\n");
+    fclose(rom);
+    return false;
+  }
+
+  size_t bytesRead = fread(cpu->memory + 0x200, 1, fileSize, rom);
+  fclose(rom);
+
+  //final check
+  if(bytesRead != (size_t)fileSize) {
+    fprintf(stderr, "ROM Read into Memory Failed\n");
+    return false;
+  }
+
+  return true;
+}
+
+void programCycle(CPU *cpu) {
+
+}
+
+uint16_t fetchOpcode(CPU *cpu) {
+
+}
+
+void exeOpcode(CPU *cpu, uint16_t opcodes) {
+
+}
+
+void updateTimers(CPU *cpu) {
+
 }
