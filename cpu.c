@@ -65,18 +65,32 @@ bool loadRom(const char *path, CPU *cpu) {
   return true;
 }
 
-void programCycle(CPU *cpu) {
-
-}
-
 uint16_t fetchOpcode(CPU *cpu) {
-
+  //Bounds check
+  if(cpu->pc > 0xFFE) {
+    fprintf(stderr, "Warning: Program counter out of bounds\n");
+  }
+  
+  uint16_t opcode = cpu->memory[cpu->pc] << 8 | cpu->memory[cpu->pc + 1];
+  printf("Opcode: %d\n", opcode);
+  return opcode;
 }
+
+void programCycle(CPU *cpu) {
+  //pause logic
+  if(cpu->haultUntilPressed)
+    return;
+
+  uint16_t opcode = fetchOpcode(cpu);
+  cpu->pc += 2;
+  exeOpcode(cpu, opcode);
+}
+
 
 void exeOpcode(CPU *cpu, uint16_t opcodes) {
 
 }
 
 void updateTimers(CPU *cpu) {
-
+  if(cpu->delayTimer > 0) --cpu->delayTimer;
 }
