@@ -27,7 +27,7 @@ void cpuInit(CPU *cpu) {
   memset(cpu->frameBuffer, 0, sizeof(cpu->frameBuffer));
 
   //fontset
-  memcpy(cpu->memory + FONTSET_LOCATION, fontSet, 80);
+  memcpy(cpu->memory + FONTSET_LOCATION, fontSet, sizeof(fontSet));
   
   cpu->haultUntilPressed = false;
   cpu->waitReg = 0;
@@ -87,10 +87,131 @@ void programCycle(CPU *cpu) {
 }
 
 
-void exeOpcode(CPU *cpu, uint16_t opcodes) {
+void exeOpcode(CPU *cpu, uint16_t opcode) {
+  uint16_t chip8op = opcode & 0xF000;
+  uint8_t x = getX(opcode);
+  uint8_t y = getY(opcode);
+  uint8_t kk = getKK(opcode);
+  uint16_t nnn = getNNN(opcode);
 
-}
+  switch(chip8op) {
+    case 0x0000:
+      switch(opcode) {
+        case 0x00E0:
+          memset(cpu->frameBuffer, 0, sizeof(cpu->frameBuffer));
+          break;
+        case 0x00EE:
+          cpu->pc = cpu->stack[--cpu->sp];
+          break;
+        default:
+          break;
+      }
+      break;
+
+    case 0x1000: {
+      cpu->pc = nnn;
+      break;
+    }
+    case 0x2000: {
+      cpu->stack[cpu->sp++] = cpu->pc;
+      cpu->pc = nnn;
+      break;
+    }
+    case 0x3000: {
+      if(cpu->V[x] == kk)
+        cpu->pc += 2;
+      break;
+    }
+    case 0x4000: {
+      if(cpu->V[x] != kk)
+        cpu->pc += 2;
+      break;
+    }
+    case 0x5000: {
+      if(cpu->V[x] == cpu->V[y])
+        cpu->pc += 2;
+      break;
+    }
+    case 0x6000: {
+      cpu->V[x] = kk;
+      break;
+    }
+    case 0x7000: {
+      cpu->V[x] += kk;
+      break;
+    }
+  }
+} 
+ 
+
 
 void updateTimers(CPU *cpu) {
   if(cpu->delayTimer > 0) --cpu->delayTimer;
 }
+
+inline uint16_t getNNN(uint16_t opcode) {
+  uint16_t nnnval = (opcode & 0x0FFF);
+  return nnnval;
+}
+
+inline uint8_t getKK(uint16_t opcode) {
+  uint8_t nnval = (opcode & 0x00FF);
+  return nnval;
+}
+
+inline uint8_t getX(uint16_t opcode) {
+  uint8_t xval = (opcode & 0x0F00) >> 8; 
+  return xval;
+}
+
+inline uint8_t getY(uint16_t opcode) {
+  uint8_t yval = (opcode & 0x00F0) >> 4;
+  return yval;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,37 @@
+Opcode   Name           Description
+------   ----           -----------
+00E0     CLS            Clears the display.
+00EE     RET            Returns from a subroutine by popping the stack.
+0NNN     SYS            Calls an RCA 1802 program at address NNN (ignored on modern interpreters).
+1NNN     JP addr        Jumps to address NNN.
+2NNN     CALL addr      Calls the subroutine at address NNN, pushing PC onto the stack.
+3XKK     SE Vx, byte    Skips the next instruction if Vx equals KK.
+4XKK     SNE Vx, byte   Skips the next instruction if Vx does not equal KK.
+5XY0     SE Vx, Vy      Skips the next instruction if Vx equals Vy.
+6XKK     LD Vx, byte    Sets Vx to KK.
+7XKK     ADD Vx, byte   Adds KK to Vx (no carry flag).
+8XY0     LD Vx, Vy      Stores Vy into Vx.
+8XY1     OR Vx, Vy      Sets Vx to Vx OR Vy.
+8XY2     AND Vx, Vy     Sets Vx to Vx AND Vy.
+8XY3     XOR Vx, Vy     Sets Vx to Vx XOR Vy.
+8XY4     ADD Vx, Vy     Adds Vy to Vx, sets VF to 1 on carry.
+8XY5     SUB Vx, Vy     Subtracts Vy from Vx, sets VF to 1 if no borrow.
+8XY6     SHR Vx         Shifts Vx right by 1, sets VF to the dropped LSB.
+8XY7     SUBN Vx, Vy    Sets Vx to Vy minus Vx, sets VF to 1 if no borrow.
+8XYE     SHL Vx         Shifts Vx left by 1, sets VF to the dropped MSB.
+9XY0     SNE Vx, Vy     Skips the next instruction if Vx does not equal Vy.
+ANNN     LD I, addr     Sets the index register I to NNN.
+BNNN     JP V0, addr    Jumps to NNN plus V0.
+CXKK     RND Vx, byte   Sets Vx to a random byte ANDed with KK.
+DXYN     DRW Vx, Vy, n  Draws an N-byte sprite at (Vx, Vy), sets VF on collision.
+EX9E     SKP Vx         Skips the next instruction if the key in Vx is pressed.
+EXA1     SKNP Vx        Skips the next instruction if the key in Vx is not pressed.
+FX07     LD Vx, DT      Sets Vx to the current delay timer value.
+FX0A     LD Vx, K       Halts execution until a key is pressed, storing it in Vx.
+FX15     LD DT, Vx      Sets the delay timer to Vx.
+FX18     LD ST, Vx      Sets the sound timer to Vx.
+FX1E     ADD I, Vx      Adds Vx to I (may set VF on overflow on some variants).
+FX29     LD F, Vx       Sets I to the address of the font sprite for the digit in Vx.
+FX33     LD B, Vx       Stores the BCD representation of Vx at I, I+1, I+2.
+FX55     LD [I], Vx     Stores registers V0 through Vx in memory starting at I.
+FX65     LD Vx, [I]     Reads registers V0 through Vx from memory starting at I.

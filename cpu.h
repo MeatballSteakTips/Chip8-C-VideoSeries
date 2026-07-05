@@ -60,5 +60,8 @@ void programCycle(CPU *cpu);
 void exeOpcode(CPU *cpu, uint16_t opcode);
 bool loadRom(const char *path, CPU *cpu);
 void updateTimers(CPU *cpu);
-
+inline uint16_t getNNN(uint16_t opcode);
+inline uint8_t getX(uint16_t opcode);
+inline uint8_t getY(uint16_t opcode);
+inline uint8_t getKK(uint16_t opcode);
 #endif
