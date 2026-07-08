@@ -5,6 +5,9 @@
 
 #define MAX_ROM_SIZE (4096 - 0x200)
 #define FONTSET_LOCATION 0x050
+#define CACHE_SIZE 4096 - 0x200
+static cachedOp cache[CACHE_SIZE];
+static bool cacheValid[CACHE_SIZE];
 
 void cpuInit(CPU *cpu) {
   //Memory
@@ -31,6 +34,8 @@ void cpuInit(CPU *cpu) {
   
   cpu->haultUntilPressed = false;
   cpu->waitReg = 0;
+
+  clearCache();
 }
 
 bool loadRom(const char *path, CPU *cpu) {
@@ -65,15 +70,28 @@ bool loadRom(const char *path, CPU *cpu) {
   return true;
 }
 
-uint16_t fetchOpcode(CPU *cpu) {
+uint16_t fetchOpcode(CPU *cpu, uint16_t addr) {
   //Bounds check
   if(cpu->pc > 0xFFE) {
     fprintf(stderr, "Warning: Program counter out of bounds\n");
   }
   
-  uint16_t opcode = cpu->memory[cpu->pc] << 8 | cpu->memory[cpu->pc + 1];
+  uint16_t opcode = cpu->memory[addr] << 8 | cpu->memory[addr + 1];
   printf("Opcode: %d\n", opcode);
   return opcode;
+}
+
+cachedOp decodeOpcode(uint16_t opcode) {
+  cachedOp op;
+
+  op.opType = opcode & 0xF000;
+  op.x   = (opcode & 0x0F00) >> 8;
+  op.y   = (opcode & 0x00F0) >> 4;
+  op.n   = opcode & 0x000F;
+  op.kk  = opcode & 0x00FF;
+  op.nnn = opcode & 0x0FFF;
+
+  return op;
 }
 
 void programCycle(CPU *cpu) {
@@ -81,22 +99,27 @@ void programCycle(CPU *cpu) {
   if(cpu->haultUntilPressed)
     return;
 
-  uint16_t opcode = fetchOpcode(cpu);
+  uint16_t addr = cpu->pc;
   cpu->pc += 2;
-  exeOpcode(cpu, opcode);
+
+  if(cacheValid[addr]) {
+    exeOpcode(cpu, &cache[addr]);
+  } else {
+    uint16_t opcode = fetchOpcode(cpu, addr);
+
+    cache[addr] = decodeOpcode(opcode);
+    cacheValid[addr] = true;
+
+    exeOpcode(cpu, &cache[addr]);
+  }
 }
 
 
-void exeOpcode(CPU *cpu, uint16_t opcode) {
-  uint16_t chip8op = opcode & 0xF000;
-  uint8_t x = getX(opcode);
-  uint8_t y = getY(opcode);
-  uint8_t kk = getKK(opcode);
-  uint16_t nnn = getNNN(opcode);
+void exeOpcode(CPU *cpu, cachedOp *op) {
 
-  switch(chip8op) {
+  switch(op->opType) {
     case 0x0000:
-      switch(opcode) {
+      switch(op->kk) {
         case 0x00E0:
           memset(cpu->frameBuffer, 0, sizeof(cpu->frameBuffer));
           break;
@@ -109,35 +132,35 @@ void exeOpcode(CPU *cpu, uint16_t opcode) {
       break;
 
     case 0x1000: {
-      cpu->pc = nnn;
+      cpu->pc = op->nnn;
       break;
     }
     case 0x2000: {
       cpu->stack[cpu->sp++] = cpu->pc;
-      cpu->pc = nnn;
+      cpu->pc = op->nnn;
       break;
     }
     case 0x3000: {
-      if(cpu->V[x] == kk)
+      if(cpu->V[op->x] == op->kk)
         cpu->pc += 2;
       break;
     }
     case 0x4000: {
-      if(cpu->V[x] != kk)
+      if(cpu->V[op->x] != op->kk)
         cpu->pc += 2;
       break;
     }
     case 0x5000: {
-      if(cpu->V[x] == cpu->V[y])
+      if(cpu->V[op->x] == cpu->V[op->y])
         cpu->pc += 2;
       break;
     }
     case 0x6000: {
-      cpu->V[x] = kk;
+      cpu->V[op->x] = op->kk;
       break;
     }
     case 0x7000: {
-      cpu->V[x] += kk;
+      cpu->V[op->x] += op->kk;
       break;
     }
   }
@@ -149,26 +172,9 @@ void updateTimers(CPU *cpu) {
   if(cpu->delayTimer > 0) --cpu->delayTimer;
 }
 
-inline uint16_t getNNN(uint16_t opcode) {
-  uint16_t nnnval = (opcode & 0x0FFF);
-  return nnnval;
+void clearCache() {
+  memset(cacheValid, 0, sizeof(cacheValid));
 }
-
-inline uint8_t getKK(uint16_t opcode) {
-  uint8_t nnval = (opcode & 0x00FF);
-  return nnval;
-}
-
-inline uint8_t getX(uint16_t opcode) {
-  uint8_t xval = (opcode & 0x0F00) >> 8; 
-  return xval;
-}
-
-inline uint8_t getY(uint16_t opcode) {
-  uint8_t yval = (opcode & 0x00F0) >> 4;
-  return yval;
-}
-
 
 
 

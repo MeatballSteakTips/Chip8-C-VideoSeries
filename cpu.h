@@ -54,14 +54,22 @@ typedef struct chip8cpu {
   bool haultUntilPressed; 
 }CPU;
 
+typedef struct {
+  uint16_t opType;
+  uint8_t x;
+  uint8_t y;
+  uint8_t n;
+  uint8_t kk;
+  uint16_t nnn;
+  uint8_t subType;
+} cachedOp;
+
 void cpuInit(CPU *cpu);
-uint16_t fetchOpcode(CPU *cpu);
+uint16_t fetchOpcode(CPU *cpu, uint16_t addr);
 void programCycle(CPU *cpu);
-void exeOpcode(CPU *cpu, uint16_t opcode);
+void exeOpcode(CPU *cpu, cachedOp *op);
 bool loadRom(const char *path, CPU *cpu);
 void updateTimers(CPU *cpu);
-inline uint16_t getNNN(uint16_t opcode);
-inline uint8_t getX(uint16_t opcode);
-inline uint8_t getY(uint16_t opcode);
-inline uint8_t getKK(uint16_t opcode);
+void clearCache();
+cachedOp decodeOpcode(uint16_t opcode);
 #endif
