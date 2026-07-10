@@ -1,5 +1,7 @@
 #include "cpu.h"
+#include <time.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 int main(int argc, char **argv) {
@@ -11,6 +13,8 @@ int main(int argc, char **argv) {
   char pathBuffer[256];
   strncpy(pathBuffer, argv[1], sizeof(pathBuffer) - 1);
   pathBuffer[sizeof(pathBuffer) - 1] = '\0';
+
+  srand(time(NULL));
 
   CPU cpu;
   cpuInit(&cpu);

@@ -72,4 +72,5 @@ bool loadRom(const char *path, CPU *cpu);
 void updateTimers(CPU *cpu);
 void clearCache();
 cachedOp decodeOpcode(uint16_t opcode);
+uint8_t randomNumber();
 #endif
