@@ -73,4 +73,5 @@ void updateTimers(CPU *cpu);
 void clearCache();
 cachedOp decodeOpcode(uint16_t opcode);
 uint8_t randomNumber();
+void drawSprite(CPU *cpu, uint8_t x, uint8_t y, uint8_t h);
 #endif

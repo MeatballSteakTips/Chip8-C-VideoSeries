@@ -222,7 +222,8 @@ void exeOpcode(CPU *cpu, cachedOp *op) {
       break;
     }
     case 0xD000: {
-      //Video logic goes here
+      drawSprite(cpu, op->x, op->y, op->n);
+      break;
     }
     case 0xE000: {
       switch(op->kk) {
@@ -302,8 +303,32 @@ void clearCache() {
   memset(cacheValid, 0, sizeof(cacheValid));
 }
 
+void drawSprite(CPU *cpu, uint8_t x, uint8_t y, uint8_t h) {
+  uint8_t xPos = cpu->V[x] % 64;
+  uint8_t yPos = cpu->V[y] % 32;
 
+  cpu->V[FLAG_REGISTER] = 0;
 
+  for(uint8_t row = 0; row < h; row++) {
+    uint16_t spriteByte = cpu->memory[cpu->idx + row];
+
+    for(uint8_t col = 0; col < 8; col++) {
+      uint8_t spritePixel = (spriteByte >> (7 - col)) & 0x1;
+
+      if(spritePixel) {
+        uint8_t px = (xPos + col) % 64;
+        uint8_t py = (yPos + row) % 32;
+        uint16_t fbIdx = py * 64 + px; //index = row * num_cols + col
+
+        if(cpu->frameBuffer[fbIdx] == 1) {
+          cpu->V[FLAG_REGISTER] = 1;
+        }
+
+        cpu->frameBuffer[fbIdx] ^= 1;
+      }
+    }
+  }
+}
 
 
 
